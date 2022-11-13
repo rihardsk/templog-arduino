@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use dht_sensor::{dht11, DhtReading};
+use dht11::Dht11;
 use panic_halt as _;
 
 #[arduino_hal::entry]
@@ -10,9 +10,9 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(dp);
 
     let mut delay = arduino_hal::Delay::new();
-    let mut temp_pin = pins.d2.into_opendrain_high();
+    let temp_pin = pins.d2.into_opendrain_high();
 
-    let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
+    let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
 
     /*
      * For examples (and inspiration), head to
@@ -26,22 +26,26 @@ fn main() -> ! {
 
     let mut led = pins.d13.into_output();
 
+    let mut dht11 = Dht11::new(temp_pin);
+
+    arduino_hal::delay_ms(1000);
     loop {
-        match dht11::Reading::read(&mut delay, &mut temp_pin) {
-            Ok(dht11::Reading {
-                temperature,
-                relative_humidity,
-            }) => {
-                ufmt::uwriteln!(&mut serial, "{}°, {}% RH", temperature, relative_humidity).unwrap()
-            }
-            Err(e) => match e {
-                dht_sensor::DhtError::PinError(_) => ufmt::uwriteln!(&mut serial, "Error: Pin error").unwrap(),
-                dht_sensor::DhtError::ChecksumMismatch => ufmt::uwriteln!(&mut serial, "Error: Checksum mismatch").unwrap(),
-                dht_sensor::DhtError::Timeout => ufmt::uwriteln!(&mut serial, "Error: Timeout").unwrap(),
-            },
-            // ufmt::uwriteln!(&mut serial, "Error {}", "aa").unwrap(),
-        }
         led.toggle();
-        arduino_hal::delay_ms(1000);
+        let measurement = dht11.perform_measurement(&mut delay);
+        led.toggle();
+
+        match measurement {
+            Ok(m) => {
+                ufmt::uwriteln!(&mut serial, "{}°, {}% RH", m.temperature, m.humidity).unwrap()
+            }
+            Err(dht11::Error::Timeout) => ufmt::uwriteln!(&mut serial, "Error: Timeout").unwrap(),
+            Err(dht11::Error::CrcMismatch) => {
+                ufmt::uwriteln!(&mut serial, "Error: Checksum mismatch").unwrap()
+            }
+            Err(dht11::Error::Gpio(_e)) => {
+                ufmt::uwriteln!(&mut serial, "Error: Gpio error").unwrap()
+            }
+        };
+        arduino_hal::delay_ms(5000);
     }
 }
