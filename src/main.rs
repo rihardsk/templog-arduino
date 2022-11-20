@@ -2,7 +2,7 @@
 #![no_main]
 
 use arduino_hal::prelude::_embedded_hal_serial_Read;
-use chrono::Timelike;
+use chrono::{Timelike, Datelike};
 use dht11::{Dht11, Measurement};
 use ds323x::{DateTimeAccess, NaiveDateTime, Rtcc};
 use nb::try_nb;
@@ -77,9 +77,35 @@ impl<T> From<dht11::Error<T>> for TempError {
 // }
 
 #[derive(Serialize, Copy, Clone)]
+struct FNaiveDateTime(NaiveDateTime);
+
+impl ufmt::uDebug for FNaiveDateTime {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized {
+        let d = self.0.date();
+        ufmt::uDebug::fmt(&d.year(), f)?;
+        f.write_char('.')?;
+        ufmt::uDebug::fmt(&d.month(), f)?;
+        f.write_char('.')?;
+        ufmt::uDebug::fmt(&d.day(), f)?;
+
+        f.write_char('_')?;
+
+        let t = self.0.time();
+        ufmt::uDebug::fmt(&t.hour(), f)?;
+        f.write_char(':')?;
+        ufmt::uDebug::fmt(&t.minute(), f)?;
+        f.write_char(':')?;
+        ufmt::uDebug::fmt(&t.second(), f)?;
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Copy, Clone, uDebug)]
 struct TempEntry {
     reading: Result<TempReading, TempError>,
-    time: Result<NaiveDateTime, TimeError>,
+    time: Result<FNaiveDateTime, TimeError>,
 }
 
 const N_READINGS: usize = 100;
@@ -127,7 +153,7 @@ fn main() -> ! {
             .perform_measurement(&mut delay)
             .map(Into::into)
             .map_err(Into::into);
-        let time: Result<_, TimeError> = rtc.datetime().map_err(Into::into);
+        let time: Result<_, TimeError> = rtc.datetime().map(FNaiveDateTime).map_err(Into::into);
         led.toggle();
 
         let entry = TempEntry { reading, time };
@@ -139,11 +165,7 @@ fn main() -> ! {
         }
 
 
-        ufmt::uwriteln!(&mut serial, "{:?}", entry.reading).unwrap();
-        match entry.time {
-            Ok(t) => ufmt::uwriteln!(&mut serial, "{}:{}:{}", t.time().hour(), t.time().minute(), t.time().second()).unwrap(),
-            Err(e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
-        }
+        ufmt::uwriteln!(&mut serial, "{:?}", entry).unwrap();
         // match measurement {
         //     Ok(m) => {
         //         ufmt::uwriteln!(&mut serial, "{}°, {}% RH", m.temperature, m.humidity).unwrap()
