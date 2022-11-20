@@ -1,8 +1,27 @@
 #![no_std]
 #![no_main]
 
+use arduino_hal::prelude::_embedded_hal_serial_Read;
 use dht11::Dht11;
+use ds323x::NaiveDateTime;
+use nb::try_nb;
 use panic_halt as _;
+use serde::{Serialize, Deserialize};
+
+#[derive(Deserialize)]
+enum Command {
+    ReadTempsSince(NaiveDateTime),
+    SetCurrentTime(NaiveDateTime),
+}
+
+#[derive(Serialize, Copy, Clone)]
+struct TempReading {
+    temperature: i16,
+    relative_humidity: u16,
+    date_time: NaiveDateTime,
+}
+
+static mut READINGS: [Option<TempReading>; 100] = [None; 100];
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -26,6 +45,7 @@ fn main() -> ! {
 
     let mut led = pins.d13.into_output();
 
+    // nb::await!();
     let mut dht11 = Dht11::new(temp_pin);
 
     arduino_hal::delay_ms(1000);
