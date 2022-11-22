@@ -2,7 +2,7 @@
 #![no_main]
 
 use arduino_hal::prelude::_embedded_hal_serial_Read;
-use chrono::{Timelike, Datelike};
+use chrono::{Datelike, Timelike};
 use dht11::{Dht11, Measurement};
 use ds323x::{DateTimeAccess, NaiveDateTime, Rtcc};
 use nb::try_nb;
@@ -82,7 +82,8 @@ struct FNaiveDateTime(NaiveDateTime);
 impl ufmt::uDebug for FNaiveDateTime {
     fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
-        W: ufmt::uWrite + ?Sized {
+        W: ufmt::uWrite + ?Sized,
+    {
         let d = self.0.date();
         ufmt::uDebug::fmt(&d.year(), f)?;
         f.write_char('.')?;
@@ -164,8 +165,18 @@ fn main() -> ! {
             NEXT_WRITE_POS = (NEXT_WRITE_POS + 1) % N_READINGS;
         }
 
-
-        ufmt::uwriteln!(&mut serial, "{:?}", entry).unwrap();
+        ufmt::uwriteln!(&mut serial, "{:?}", entry.reading).unwrap();
+        match entry.time {
+            Ok(t) => ufmt::uwriteln!(
+                &mut serial,
+                "{}:{}:{}",
+                t.0.time().hour(),
+                t.0.time().minute(),
+                t.0.time().second()
+            )
+            .unwrap(),
+            Err(e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
+        }
         // match measurement {
         //     Ok(m) => {
         //         ufmt::uwriteln!(&mut serial, "{}°, {}% RH", m.temperature, m.humidity).unwrap()
