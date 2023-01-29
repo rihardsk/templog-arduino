@@ -121,7 +121,8 @@ fn main() -> ! {
     let mut delay = arduino_hal::Delay::new();
     let temp_pin = pins.d2.into_opendrain_high();
 
-    let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
+    // let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
+    let mut serial = arduino_hal::default_serial!(dp, pins, 9600);
 
     /*
      * For examples (and inspiration), head to
