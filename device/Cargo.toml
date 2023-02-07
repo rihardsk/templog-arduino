@@ -23,7 +23,7 @@ chrono = { version = "0.4.23", features = ["serde"], default-features = false }
 # dht-sensor = "0.2.1"
 
 [dependencies.postcard]
-path = "../postcard"
+path = "../../postcard"
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"
