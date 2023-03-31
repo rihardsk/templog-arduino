@@ -27,9 +27,9 @@ dependencies = [
 
 [[package]]
 name = "atomic-polyfill"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d299f547288d6db8d5c3a2916f7b2f66134b15b8c1ac1c4357dd3b8752af7bb2"
+checksum = "c314e70d181aa6053b26e3f7fbf86d1dfff84f816a6175b967666b3506ef7289"
 dependencies = [
  "critical-section",
 ]
@@ -238,7 +238,7 @@ checksum = "d01a5bd0424d00070b0098dd17ebca6f961a959dead1dbcbbbc1d1cd8d3deeba"
 
 [[package]]
 name = "postcard"
-version = "1.0.2"
+version = "1.0.4"
 dependencies = [
  "cobs",
  "heapless",
