@@ -1,8 +1,16 @@
 [package]
-name = "common"
+name = "templog-common"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# TODO: put these behind a feature flag
+dht11 = "0.3.1"
+ds323x = "0.5.0"
+
+ufmt = "0.1.0"
+serde = { version = "1.0.147", features = ["derive"], default-features = false }
+chrono = { version = "0.4.23", features = ["serde"], default-features = false }
+# rtcc = {  version = "0.3.0" }

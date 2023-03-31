@@ -388,6 +388,18 @@ dependencies = [
  "panic-halt",
  "postcard",
  "serde",
+ "templog-common",
+ "ufmt",
+]
+
+[[package]]
+name = "templog-common"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dht11",
+ "ds323x",
+ "serde",
  "ufmt",
 ]
 

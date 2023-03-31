@@ -2,112 +2,14 @@
 #![no_main]
 
 use arduino_hal::prelude::_embedded_hal_serial_Read;
-use chrono::{Datelike, Timelike};
-use dht11::{Dht11, Measurement};
-use ds323x::{DateTimeAccess, NaiveDateTime, Rtcc};
+use chrono::Timelike;
+use dht11::Dht11;
+use ds323x::DateTimeAccess;
 use nb::try_nb;
 use panic_halt as _;
 use serde::{Deserialize, Serialize};
 use ufmt::{derive::uDebug, uDisplay};
-
-#[derive(Deserialize)]
-enum Command {
-    ReadTempsSince(NaiveDateTime),
-    SetCurrentTime(NaiveDateTime),
-}
-
-#[derive(Serialize, Copy, Clone, uDebug)]
-struct TempReading {
-    temperature: i16,
-    relative_humidity: u16,
-}
-
-impl From<Measurement> for TempReading {
-    fn from(m: Measurement) -> Self {
-        TempReading {
-            temperature: m.temperature,
-            relative_humidity: m.humidity,
-        }
-    }
-}
-
-#[derive(Serialize, Copy, Clone, uDebug)]
-enum TempError {
-    Timeout,
-    CrcMismatch,
-    Gpio,
-}
-
-// I've copied these from the ds323x lib but don't know what all of them mean
-// exactly
-#[derive(Serialize, Copy, Clone, uDebug)]
-enum TimeError {
-    Comm,
-    Pin,
-    InvalidInputData,
-    InvalidDeviceState,
-}
-
-impl<T1, T2> From<ds323x::Error<T1, T2>> for TimeError {
-    fn from(value: ds323x::Error<T1, T2>) -> Self {
-        match value {
-            ds323x::Error::Comm(_) => TimeError::Comm,
-            ds323x::Error::Pin(_) => TimeError::Pin,
-            ds323x::Error::InvalidInputData => TimeError::InvalidInputData,
-            ds323x::Error::InvalidDeviceState => TimeError::InvalidDeviceState,
-        }
-    }
-}
-
-impl<T> From<dht11::Error<T>> for TempError {
-    fn from(value: dht11::Error<T>) -> Self {
-        match value {
-            dht11::Error::Timeout => TempError::Timeout,
-            dht11::Error::CrcMismatch => TempError::CrcMismatch,
-            dht11::Error::Gpio(_) => TempError::Gpio,
-        }
-    }
-}
-
-// #[derive(Serialize, Copy, Clone)]
-// enum These<A, B> {
-//     This(A),
-//     That(B),
-//     Both(A, B),
-// }
-
-#[derive(Serialize, Copy, Clone)]
-struct FNaiveDateTime(NaiveDateTime);
-
-impl ufmt::uDebug for FNaiveDateTime {
-    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
-    where
-        W: ufmt::uWrite + ?Sized,
-    {
-        let d = self.0.date();
-        ufmt::uDebug::fmt(&d.year(), f)?;
-        f.write_char('.')?;
-        ufmt::uDebug::fmt(&d.month(), f)?;
-        f.write_char('.')?;
-        ufmt::uDebug::fmt(&d.day(), f)?;
-
-        f.write_char('_')?;
-
-        let t = self.0.time();
-        ufmt::uDebug::fmt(&t.hour(), f)?;
-        f.write_char(':')?;
-        ufmt::uDebug::fmt(&t.minute(), f)?;
-        f.write_char(':')?;
-        ufmt::uDebug::fmt(&t.second(), f)?;
-        Ok(())
-    }
-}
-
-#[derive(Serialize, Copy, Clone, uDebug)]
-struct TempEntry {
-    reading: Result<TempReading, TempError>,
-    time: Result<FNaiveDateTime, TimeError>,
-}
+use templog_common::{TempEntry, TempReading, TempError, TimeError, FNaiveDateTime};
 
 const N_READINGS: usize = 100;
 static mut READINGS: [Option<TempEntry>; N_READINGS] = [None; N_READINGS];

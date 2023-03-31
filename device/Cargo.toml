@@ -22,6 +22,9 @@ serde = { version = "1.0.147", features = ["derive"], default-features = false }
 chrono = { version = "0.4.23", features = ["serde"], default-features = false }
 # dht-sensor = "0.2.1"
 
+[dependencies.templog-common]
+path = "../common"
+
 [dependencies.postcard]
 path = "../../postcard"
 
