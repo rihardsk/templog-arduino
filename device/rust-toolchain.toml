@@ -1,4 +1,6 @@
 [toolchain]
-channel = "nightly-2022-07-10"
+# channel = "nightly-2022-07-10"  # this is too old for rust-analyzer
+# channel = "nightly-2023-03-31"  # this has an llvm error
+channel = "nightly-2023-03-24"
 components = ["rust-src"]
 profile = "minimal"
