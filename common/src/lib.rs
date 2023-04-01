@@ -3,8 +3,6 @@
 use chrono::{Datelike, Timelike, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
-// TODO: put this behind a feature flag
-use dht11::Measurement;
 
 #[derive(Deserialize)]
 pub enum Command {
@@ -18,8 +16,9 @@ pub struct TempReading {
     pub relative_humidity: u16,
 }
 
-impl From<Measurement> for TempReading {
-    fn from(m: Measurement) -> Self {
+#[cfg(feature = "dht11")]
+impl From<dht11::Measurement> for TempReading {
+    fn from(m: dht11::Measurement) -> Self {
         TempReading {
             temperature: m.temperature,
             relative_humidity: m.humidity,
@@ -44,6 +43,7 @@ pub enum TimeError {
     InvalidDeviceState,
 }
 
+#[cfg(feature = "ds323x")]
 impl<T1, T2> From<ds323x::Error<T1, T2>> for TimeError {
     fn from(value: ds323x::Error<T1, T2>) -> Self {
         match value {
@@ -55,6 +55,7 @@ impl<T1, T2> From<ds323x::Error<T1, T2>> for TimeError {
     }
 }
 
+#[cfg(feature = "dht11")]
 impl<T> From<dht11::Error<T>> for TempError {
     fn from(value: dht11::Error<T>) -> Self {
         match value {
