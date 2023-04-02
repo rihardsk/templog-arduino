@@ -5,15 +5,24 @@ use arduino_hal::prelude::_embedded_hal_serial_Read;
 use chrono::Timelike;
 use dht11::Dht11;
 use ds323x::DateTimeAccess;
-use nb::try_nb;
+use nb::{try_nb, block};
 use panic_halt as _;
+use postcard::to_vec;
 use serde::{Deserialize, Serialize};
 use ufmt::{derive::uDebug, uDisplay};
+use heapless::Vec;
+
 use templog_common::{TempEntry, TempReading, TempError, TimeError, FNaiveDateTime};
 
 const N_READINGS: usize = 100;
 static mut READINGS: [Option<TempEntry>; N_READINGS] = [None; N_READINGS];
 static mut NEXT_WRITE_POS: usize = 0;
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+struct RefStruct<'a> {
+    bytes: &'a [u8],
+    str_s: &'a str,
+}
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -68,6 +77,38 @@ fn main() -> ! {
             NEXT_WRITE_POS = (NEXT_WRITE_POS + 1) % N_READINGS;
         }
 
+        ufmt::uwriteln!(&mut serial, "Converting").unwrap();
+        arduino_hal::delay_ms(1000);
+
+        // TODO: wtf, for some reason this serialization code works ...
+        // let message = "hElLo";
+        // let bytes = [0x01, 0x10, 0x02, 0x20];
+        // let output: postcard::Result<Vec<u8, 11>> = to_vec(&RefStruct {
+        //     bytes: &bytes,
+        //     str_s: message,
+        // });
+
+        // TODO: ... but if we use this code, then it messes up even other
+        // uwriteln! calls
+        //
+        // TempEntry suposedly takes 24 bytes in memory, 64 bytes should be
+        // plenty for serialization
+        let output: postcard::Result<Vec<u8, 64>> = to_vec(&entry);
+
+        ufmt::uwriteln!(&mut serial, "Writing").unwrap();
+        arduino_hal::delay_ms(1000);
+        match output {
+            Ok(output) => {
+                for byte in output {
+                    serial.write_byte(byte);
+                }
+                serial.flush();
+            },
+            Err(_e) => ufmt::uwriteln!(&mut serial, "Serialization error").unwrap(),
+        }
+
+        arduino_hal::delay_ms(1000);
+
         ufmt::uwriteln!(&mut serial, "{:?}", entry.reading).unwrap();
         match entry.time {
             Ok(t) => ufmt::uwriteln!(
@@ -78,7 +119,7 @@ fn main() -> ! {
                 t.0.time().second()
             )
             .unwrap(),
-            Err(e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
+            Err(_e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
         }
         // match measurement {
         //     Ok(m) => {

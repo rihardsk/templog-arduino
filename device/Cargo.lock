@@ -384,6 +384,7 @@ dependencies = [
  "dht11",
  "ds323x",
  "embedded-hal",
+ "heapless",
  "nb 0.1.3",
  "panic-halt",
  "postcard",

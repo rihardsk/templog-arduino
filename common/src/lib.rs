@@ -10,7 +10,7 @@ pub enum Command {
     SetCurrentTime(NaiveDateTime),
 }
 
-#[derive(Serialize, Copy, Clone, uDebug)]
+#[derive(Serialize, Copy, Clone, uDebug, Debug, Eq, PartialEq)]
 pub struct TempReading {
     pub temperature: i16,
     pub relative_humidity: u16,
@@ -26,7 +26,7 @@ impl From<dht11::Measurement> for TempReading {
     }
 }
 
-#[derive(Serialize, Copy, Clone, uDebug)]
+#[derive(Serialize, Copy, Clone, uDebug, Debug, Eq, PartialEq)]
 pub enum TempError {
     Timeout,
     CrcMismatch,
@@ -35,7 +35,7 @@ pub enum TempError {
 
 // I've copied these from the ds323x lib but don't know what all of them mean
 // exactly
-#[derive(Serialize, Copy, Clone, uDebug)]
+#[derive(Serialize, Copy, Clone, uDebug, Debug, Eq, PartialEq)]
 pub enum TimeError {
     Comm,
     Pin,
@@ -73,7 +73,7 @@ impl<T> From<dht11::Error<T>> for TempError {
 //     Both(A, B),
 // }
 
-#[derive(Serialize, Copy, Clone)]
+#[derive(Serialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FNaiveDateTime(pub NaiveDateTime);
 
 impl ufmt::uDebug for FNaiveDateTime {
@@ -100,12 +100,13 @@ impl ufmt::uDebug for FNaiveDateTime {
     }
 }
 
-#[derive(Serialize, Copy, Clone, uDebug)]
+#[derive(Serialize, Copy, Clone, uDebug, Debug, Eq, PartialEq)]
 pub struct TempEntry {
     pub reading: Result<TempReading, TempError>,
     pub time: Result<FNaiveDateTime, TimeError>,
 }
-pub fn add(left: usize, right: usize) -> usize {
+
+fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
