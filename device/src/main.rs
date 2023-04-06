@@ -1,22 +1,15 @@
 #![no_std]
 #![no_main]
 
-use arduino_hal::prelude::_embedded_hal_serial_Read;
-use chrono::Timelike;
+use chrono::NaiveDateTime;
 use dht11::Dht11;
 use ds323x::DateTimeAccess;
-use nb::{try_nb, block};
+use heapless::Vec;
 use panic_halt as _;
 use postcard::to_vec;
 use serde::{Deserialize, Serialize};
-use ufmt::{derive::uDebug, uDisplay};
-use heapless::Vec;
 
-use templog_common::{TempEntry, TempReading, TempError, TimeError, FNaiveDateTime};
-
-const N_READINGS: usize = 100;
-static mut READINGS: [Option<TempEntry>; N_READINGS] = [None; N_READINGS];
-static mut NEXT_WRITE_POS: usize = 0;
+use templog_common::{FNaiveDateTime, TempEntry, TempError, TempReading, TimeError};
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 struct RefStruct<'a> {
@@ -34,6 +27,8 @@ fn main() -> ! {
 
     // let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
     let mut serial = arduino_hal::default_serial!(dp, pins, 9600);
+
+    ufmt::uwriteln!(&mut serial, "Setting up sensors").unwrap();
 
     /*
      * For examples (and inspiration), head to
@@ -57,25 +52,26 @@ fn main() -> ! {
     );
     let mut rtc = ds323x::Ds323x::new_ds3231(i2c);
 
-    let mut coms_buff: [u8; 20] = [0; 20];
+    ufmt::uwriteln!(&mut serial, "Entering loop").unwrap();
 
     arduino_hal::delay_ms(1000);
     loop {
         led.toggle();
-        let reading: Result<TempReading, TempError> = dht11
-            .perform_measurement(&mut delay)
-            .map(Into::into)
-            .map_err(Into::into);
-        let time: Result<_, TimeError> = rtc.datetime().map(FNaiveDateTime).map_err(Into::into);
+        // let reading: Result<TempReading, TempError> = dht11
+        //     .perform_measurement(&mut delay)
+        //     .map(Into::into)
+        //     .map_err(Into::into);
+        // let time: Result<_, TimeError> = rtc.datetime().map(FNaiveDateTime).map_err(Into::into);
         led.toggle();
 
-        let entry = TempEntry { reading, time };
-        // TODO: use Cells or something instead. This should be fine for now,
-        // though, as long as we don't mess up with interrupts or something
-        unsafe {
-            READINGS[NEXT_WRITE_POS] = Some(entry);
-            NEXT_WRITE_POS = (NEXT_WRITE_POS + 1) % N_READINGS;
-        }
+        // let entry = TempEntry { reading, time };
+        let entry = TempEntry {
+            reading: Ok(TempReading {
+                temperature: 1,
+                relative_humidity: 2,
+            }),
+            time: Ok(FNaiveDateTime(NaiveDateTime::MIN)),
+        };
 
         ufmt::uwriteln!(&mut serial, "Converting").unwrap();
         arduino_hal::delay_ms(1000);
@@ -103,24 +99,24 @@ fn main() -> ! {
                     serial.write_byte(byte);
                 }
                 serial.flush();
-            },
+            }
             Err(_e) => ufmt::uwriteln!(&mut serial, "Serialization error").unwrap(),
         }
 
         arduino_hal::delay_ms(1000);
 
-        ufmt::uwriteln!(&mut serial, "{:?}", entry.reading).unwrap();
-        match entry.time {
-            Ok(t) => ufmt::uwriteln!(
-                &mut serial,
-                "{}:{}:{}",
-                t.0.time().hour(),
-                t.0.time().minute(),
-                t.0.time().second()
-            )
-            .unwrap(),
-            Err(_e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
-        }
+        // ufmt::uwriteln!(&mut serial, "{:?}", entry.reading).unwrap();
+        // match entry.time {
+        //     Ok(t) => ufmt::uwriteln!(
+        //         &mut serial,
+        //         "{}:{}:{}",
+        //         t.0.time().hour(),
+        //         t.0.time().minute(),
+        //         t.0.time().second()
+        //     )
+        //     .unwrap(),
+        //     Err(_e) => ufmt::uwriteln!(&mut serial, "Time error").unwrap(),
+        // }
         // match measurement {
         //     Ok(m) => {
         //         ufmt::uwriteln!(&mut serial, "{}°, {}% RH", m.temperature, m.humidity).unwrap()
