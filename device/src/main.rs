@@ -39,7 +39,8 @@ fn main() -> ! {
         // });
 
         // TODO: ... but if we use this code, then it messes up even other
-        // uwriteln! calls
+        // uwriteln! calls (ok, that was the case previously, now it simply
+        // resets and doesn't get to the next uwriteln)
         //
         // TempEntry suposedly takes 24 bytes in memory, 64 bytes should be
         // plenty for serialization
