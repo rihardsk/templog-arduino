@@ -42,8 +42,8 @@ fn main() -> ! {
         // uwriteln! calls (ok, that was the case previously, now it simply
         // resets and doesn't get to the next uwriteln)
         //
-        // TempEntry suposedly takes 24 bytes in memory, 64 bytes should be
-        // plenty for serialization
+        // Not sure how much memory this takes but 64 bytes should be plenty for
+        // serialization, i guess
         let output: postcard::Result<Vec<u8, 64>> = to_vec(&entry);
 
         ufmt::uwriteln!(&mut serial, "Writing").unwrap();

@@ -6,3 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ufmt = "0.1.0"
+# postcard = "1.0.2"
+serde = { version = "1.0.147", features = ["derive"], default-features = false }
+chrono = { version = "0.4.23", features = ["serde"], default-features = false }
+heapless = { git = "https://github.com/japaric/heapless" }
+# dht-sensor = "0.2.1"
+
+# [dependencies.templog-common]
+# path = "../common"
+
+[dependencies.postcard]
+path = "../../postcard"
