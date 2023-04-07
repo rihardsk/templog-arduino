@@ -130,25 +130,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6548a0ad5d2549e111e1f6a11a6c2e2d00ce6a3dafe22948d67c2b443f775e52"
 
 [[package]]
-name = "dht11"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa82acd8985622297d3feb1e2bf1ce177aaa1d6518df69524110410d08c7fb06"
-dependencies = [
- "embedded-hal",
-]
-
-[[package]]
-name = "ds323x"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "057e63d03a3beb83d3c9b7a19b799c60e203b0c53f1bbec6a715804907f73a2b"
-dependencies = [
- "embedded-hal",
- "rtcc",
-]
-
-[[package]]
 name = "embedded-hal"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -270,15 +251,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rtcc"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3623619ce77c09a7d87cf7c61c5c887b9c7dee8805f66af6c4aa5824be4d9930"
-dependencies = [
- "chrono",
-]
-
-[[package]]
 name = "rustc_version"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,25 +353,10 @@ version = "0.1.0"
 dependencies = [
  "arduino-hal",
  "chrono",
- "dht11",
- "ds323x",
  "embedded-hal",
  "heapless",
- "nb 0.1.3",
  "panic-halt",
  "postcard",
- "serde",
- "templog-common",
- "ufmt",
-]
-
-[[package]]
-name = "templog-common"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dht11",
- "ds323x",
  "serde",
  "ufmt",
 ]
